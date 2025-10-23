@@ -3,11 +3,13 @@ package main
 import (
 	"context"
 	"farm-service/bootstrap"
+	"farm-service/infrastructure/grpc_client"
 	"farm-service/infrastructure/grpc_service"
 	plant_variety_service "farm-service/infrastructure/grpc_service/plant_variety"
 	planting_cycle_service "farm-service/infrastructure/grpc_service/planting_cycle"
 
 	"github.com/anhvanhoa/service-core/domain/discovery"
+	gc "github.com/anhvanhoa/service-core/domain/grpc_client"
 )
 
 func main() {
@@ -33,6 +35,9 @@ func StartGRPCServer() {
 	}
 	discovery.Register()
 
+	clientFactory := gc.NewClientFactory(env.GrpcClients...)
+	permissionClient := grpc_client.NewPermissionClient(clientFactory.GetClient(env.PermissionServiceAddr))
+
 	plantVarietyService := plant_variety_service.NewPlantVarietyService(app.Repos.PlantVarietyRepository)
 	plantingCycleService := planting_cycle_service.NewPlantingCycleService(app.Repos.PlantingCycleRepository)
 
@@ -45,6 +50,10 @@ func StartGRPCServer() {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
+	permissions := app.Helper.ConvertResourcesToPermissions(grpcSrv.GetResources())
+	if _, err := permissionClient.PermissionServiceClient.RegisterPermission(ctx, permissions); err != nil {
+		log.Fatal("Failed to register permission: " + err.Error())
+	}
 	if err := grpcSrv.Start(ctx); err != nil {
 		log.Fatal("gRPC server error: " + err.Error())
 	}
