@@ -38,6 +38,7 @@ func StartGRPCServer() {
 
 	grpcSrv := grpc_service.NewGRPCServer(
 		env, log,
+		app.Cache,
 		plantVarietyService,
 		plantingCycleService,
 	)

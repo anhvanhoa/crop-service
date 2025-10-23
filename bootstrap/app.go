@@ -4,16 +4,20 @@ import (
 	"farm-service/infrastructure/repo"
 
 	"github.com/anhvanhoa/service-core/bootstrap/db"
+	"github.com/anhvanhoa/service-core/domain/cache"
 	"github.com/anhvanhoa/service-core/domain/log"
+	"github.com/anhvanhoa/service-core/utils"
 	"github.com/go-pg/pg/v10"
 	"go.uber.org/zap/zapcore"
 )
 
 type Application struct {
-	Env   *Env
-	DB    *pg.DB
-	Log   *log.LogGRPCImpl
-	Repos *repo.Repository
+	Env    *Env
+	DB     *pg.DB
+	Log    *log.LogGRPCImpl
+	Repos  *repo.Repository
+	Cache  cache.CacheI
+	Helper utils.Helper
 }
 
 func App() *Application {
@@ -25,11 +29,23 @@ func App() *Application {
 		URL:  env.UrlDb,
 		Mode: env.NodeEnv,
 	})
-
+	helper := utils.NewHelper()
+	configRedis := cache.NewConfigCache(
+		env.DbCache.Addr,
+		env.DbCache.Password,
+		env.DbCache.Db,
+		env.DbCache.Network,
+		env.DbCache.MaxIdle,
+		env.DbCache.MaxActive,
+		env.DbCache.IdleTimeout,
+	)
+	cache := cache.NewCache(configRedis)
 	return &Application{
-		Env:   &env,
-		DB:    db,
-		Log:   log,
-		Repos: repo.NewRepository(db),
+		Env:    &env,
+		DB:     db,
+		Log:    log,
+		Repos:  repo.NewRepository(db),
+		Cache:  cache,
+		Helper: helper,
 	}
 }
