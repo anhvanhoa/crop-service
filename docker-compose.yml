@@ -6,7 +6,7 @@ services:
       secrets:
         - github_token
     image: crop-service:latest
-    container_name: crop-service_app
+    container_name: crop_service_app
     ports:
       - "50056:50056"
     networks:
