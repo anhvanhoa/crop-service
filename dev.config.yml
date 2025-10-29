@@ -1,4 +1,6 @@
 node_env: "development"
+secret_service: "CropServiceSecret"
+access_secret: "your-access-jwt-secret-here"
 url_db: "postgres://postgres:123456@localhost:5432/crop_service_db?sslmode=disable"
 name_service: "CropService"
 port_grpc: 40056
